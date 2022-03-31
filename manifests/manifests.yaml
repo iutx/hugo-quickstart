@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blog-system
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blog-ing
+  namespace: blog-system
+spec:
+  rules:
+    - host: your.domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: blog-service
+                port:
+                  number: 80
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: blog-service
+  namespace: blog-system
+spec:
+  ports:
+    - name: port-80
+      protocol: TCP
+      port: 80
+  selector:
+    cloud/service: blog 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog
+  namespace: blog-system
+  labels:
+    cloud/service: blog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      cloud/service: blog
+  template:
+    metadata:
+      labels:
+        cloud/service: blog
+    spec:
+      containers:
+      - name: server
+        image: registry.cn-shanghai.aliyuncs.com/viper/hugo-quickstart
+        ports:
+        - containerPort: 80
+        imagePullPolicy: Always
+
